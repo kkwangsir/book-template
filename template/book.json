@@ -1,0 +1,41 @@
+{
+  "title": "Your Book Title",
+  "subtitle": "A Subtitle<br>That Can Span Two Lines",
+  "author": "by Author Name",
+
+  "pages": [
+    {
+      "title": "The Beginning",
+      "layout": "bottom-overlay",
+      "img": "page_01.png",
+      "text": "Page text here. Use \\n\\n for paragraph breaks and \\n for line breaks."
+    },
+    {
+      "title": "Different Layout",
+      "layout": "left-right",
+      "img": "page_02.png",
+      "text": "Image on left, text on right."
+    },
+    {
+      "title": "Full Bleed Art",
+      "layout": "full-bleed",
+      "img": "page_03.png",
+      "text": ""
+    }
+  ],
+
+  "vocabulary": [
+    {"word": "example", "pron": "/ɪɡˈzæmp.əl/", "type": "noun", "zh": "例子", "en": "A thing that shows what something is like"}
+  ],
+
+  "questions": [
+    {
+      "n": 1,
+      "q": "Question text?",
+      "opts": ["A. Option A", "B. Option B", "C. Option C", "D. Option D"],
+      "ans": "B",
+      "text": "Full answer text",
+      "exp": "Explanation with page reference."
+    }
+  ]
+}
