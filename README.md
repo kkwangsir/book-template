@@ -6,69 +6,97 @@ Zero-dependency book builder for children's early readers. Outputs a single scro
 
 ```bash
 git clone git@github.com:kkwangsir/book-template.git my-book
-cd my-book
+cd my-book/template
 
-# 1. Put your images in images/ (1024×1536 JPG recommended)
-# 2. Edit template/book.json with your story
+# 1. Put images in images/ (1024×1536 JPG)
+# 2. Edit book.json with your story
 # 3. Build
-node build.js template
+node ../build.js .
 
-# Output: template/docs/index.html
+# Output: docs/index.html — open in browser → Ctrl+P → Save as PDF
 ```
 
-## Layout
+## Layout (pages[] mode)
 
-One scrollable page, ready to print:
 ```
-Cover → Vocabulary List → Story Pages → Reading Comprehension → Answer Key
+Cover → Vocabulary → Story pages → Questions → Answer Key
 ```
 
-Letter size (215.9×279.4mm). Open `docs/index.html` → Ctrl+P → Save as PDF.
+## Layout (chapters[] mode)
+
+```
+Cover → Ch1 Title → Vocab → Pages → Ch2 Title → Vocab → Pages → ... → All Questions → All Answers
+```
+
+## Single Chapter Build
+
+```bash
+node ../build.js . --chapter 1   # → docs/chapter-01.html
+node ../build.js . --chapter 2   # → docs/chapter-02.html
+```
+
+Each chapter gets its own vocabulary and title page. Questions accumulate across chapters and appear at the end.
+
+## PDF Export
+
+```bash
+# Full book PDF
+weasyprint docs/index.html "My Book.pdf"
+
+# Single chapter PDF
+weasyprint docs/chapter-01.html "Chapter 1.pdf"
+
+# Or just open the HTML in Chrome → Ctrl+P → Save as PDF
+```
 
 ## Structure
 
 ```
 my-book/
-├── images/            # page_01.jpg, page_02.jpg ...
-├── book.json          # Story data
-└── build.js           # Build script (stands alone, no npm install)
+├── images/            # page_01.jpg, ch01_01.jpg, etc.
+├── book.json          # Story data (pages[] or chapters[])
+└── build.js           # Build script (from parent dir)
 ```
 
 ## book.json Format
 
-See `template/book.json` for the full schema.
+See `template/book.json` for a full example.
 
-Required fields:
-- `pages[]` — title, img (filename), text (use `\n\n` for paragraphs), layout ("bottom-overlay" or "left-right")
-- `vocabulary[]` — word, pron (IPA), type, zh, en
-- `questions[]` — n, q, opts[4], ans, text, exp
+Two modes:
+
+**Simple (pages[]):**
+```json
+{
+  "pages": [...],
+  "vocabulary": [...],
+  "questions": [...]
+}
+```
+
+**Chapter book (chapters[]):**
+```json
+{
+  "chapters": [
+    {
+      "title": "Chapter Name",
+      "subtitle": "Optional subtitle",
+      "pages": [...],
+      "vocabulary": [...],
+      "questions": [...]
+    }
+  ]
+}
+```
 
 ## Image Guidelines
 
-- **Size:** 1024×1536 (portrait, matches Letter)
-- **Format:** JPG quality 85 (~400KB/page recommended)
-- **Content:** Use GPT Image 2 ("Western comic book art, American graphic novel style")
-- **Character:** Keep consistent appearance across pages
-
-## Build & Deploy
-
-```bash
-# Build outputs to docs/
-node build.js .
-
-# Deploy to GitHub Pages
-git init
-git add -A
-git commit -m "initial book"
-git remote add origin git@github.com:<USER>/<REPO>.git
-git push -u origin master
-
-# Settings → Pages → branch: master, folder: /docs
-```
+- **Size:** 1024×1536 (portrait, Letter ratio)
+- **Format:** JPG quality 85 (~400KB/page)
+- **Style:** Western comic book art
 
 ## Tech
 
-- **Standalone Node.js** — just `node build.js`, no npm install needed
-- **WeasyPrint** (optional) — `pip install weasyprint && weasyprint docs/index.html book.pdf`
-- **Letter size** — `@page{size:Letter;margin:0}` for exact PDF output
-- **Print colors** — `print-color-adjust:exact` preserves backgrounds in Chrome
+- **Standalone Node.js** — just `node build.js`, no npm install
+- **WeasyPrint** — `pip install weasyprint` for server-side PDF
+- **Letter size** — `@page{size:Letter;margin:0}`
+- **Code in this repo** — content repos gitignore build.js

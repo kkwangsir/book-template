@@ -1,43 +1,50 @@
 {
-  "title": "My Story Title",
-  "subtitle": "A subtitle about the story",
+  "title": "My Story Book",
+  "subtitle": "A chapter book for early readers",
   "author": "Written for [Child's Name]",
-  "pages": [
+  "chapters": [
     {
-      "title": "Page Title",
-      "layout": "bottom-overlay",
-      "img": "page_01.jpg",
-      "text": "Write your story here. Use double newlines for paragraph breaks.\n\nLike this second paragraph."
+      "title": "The Beginning",
+      "subtitle": "Where it all started",
+      "pages": [
+        {
+          "title": "First Page",
+          "layout": "bottom-overlay",
+          "img": "ch01_01.jpg",
+          "text": "Write your story here. Use double newlines for paragraph breaks.\n\nLike this second paragraph."
+        },
+        {
+          "title": "Second Page",
+          "layout": "bottom-overlay",
+          "img": "ch01_02.jpg",
+          "text": "Each page should be 40\u201380 words, a complete narrative scene."
+        }
+      ],
+      "vocabulary": [
+        {"word": "example", "pron": "/\u026a\u0261\u02c8z\u00e6m.p\u0259l/", "type": "noun", "zh": "\u4f8b\u5b50", "en": "A thing that shows what something is like"}
+      ],
+      "questions": [
+        {
+          "n": 1,
+          "q": "Question text?",
+          "opts": ["A. Option one", "B. Option two", "C. Option three", "D. Option four"],
+          "ans": "A",
+          "text": "Correct answer",
+          "exp": "Explanation with page reference"
+        }
+      ]
     },
     {
-      "title": "Page Two",
-      "layout": "bottom-overlay",
-      "img": "page_02.jpg",
-      "text": "Each page should be 40\u201380 words, a complete narrative scene.\n\nTarget reading level: age 7\u20139."
-    }
-  ],
-  "vocabulary": [
-    {
-      "word": "example",
-      "pron": "/\u026a\u0261\u02c8z\u00e6m.p\u0259l/",
-      "type": "noun",
-      "zh": "\u4f8b\u5b50",
-      "en": "A thing that shows what something is like"
-    }
-  ],
-  "questions": [
-    {
-      "n": 1,
-      "q": "Question text here?",
-      "opts": [
-        "A. First option",
-        "B. Second option",
-        "C. Third option",
-        "D. Fourth option"
+      "title": "The Middle",
+      "pages": [
+        {"title": "Third Page", "layout": "bottom-overlay", "img": "ch02_01.jpg", "text": "Chapter 2 content."}
       ],
-      "ans": "A",
-      "text": "Correct answer explanation",
-      "exp": "Detailed explanation and page reference"
+      "vocabulary": [
+        {"word": "another", "pron": "/\u0259\u02c8n\u028c\u00f0.\u0259r/", "type": "adj", "zh": "\u53e6\u4e00\u4e2a", "en": "One more"}
+      ],
+      "questions": [
+        {"n": 2, "q": "Question 2?", "opts": ["A. Opt", "B. Opt", "C. Opt", "D. Opt"], "ans": "B", "text": "Correct", "exp": "Explanation"}
+      ]
     }
   ]
 }
