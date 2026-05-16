@@ -2,7 +2,8 @@
 
 /**
  * book-template build script
- * Reads book.json → generates static HTML → outputs to dist/
+ * Reads book.json → generates single scrollable HTML → outputs to docs/
+ * Layout: Cover → Vocabulary → Story pages → Questions → Answer Key
  *
  * Usage: node build.js [path-to-book-dir]
  * Default: current directory
@@ -14,7 +15,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const bookDir = process.argv[2] || '.';
-const distDir = path.resolve(bookDir, 'dist');
+const distDir = path.resolve(bookDir, 'docs');
 const imagesDir = path.resolve(bookDir, 'images');
 const distImages = path.resolve(distDir, 'images');
 
@@ -24,47 +25,30 @@ const book = JSON.parse(fs.readFileSync(path.resolve(bookDir, 'book.json'), 'utf
 // ── Helpers ──
 function esc(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-          .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+          .replace(/\"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function toHtml(p) {
   return p.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
 }
 
-function shell(title, body, extraCss = '') {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${esc(title)}</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#666;padding:12px;font-family:Georgia,'Times New Roman',serif}
-${css}
-${extraCss}
-</style>
-</head>
-<body>
-${body}
-</body>
-</html>`;
-}
-
 // ── CSS ──
 const css = `
+@page{size:Letter;margin:0}
+
+*{margin:0;padding:0;box-sizing:border-box;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+
 :root{--cream:#f5ebd7;--brown:#322318;--gold:#c8a050;--green:#55824b;--pw:215.9mm;--ph:279.4mm}
 
 /* Story page base */
-.sp{width:var(--pw);height:var(--ph);position:relative;overflow:hidden;background:white;margin:0 auto}
-.sp img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
+.sp{width:var(--pw);height:var(--ph);position:relative;overflow:hidden;background:#322318;margin:12px auto}
+.sp .sp-img{display:block;width:100%;height:calc(100% - 85mm);object-fit:cover}
 
-/* Bottom overlay layout */
-.sp .bar{position:absolute;bottom:0;left:0;right:0;height:107mm;background:rgba(50,35,24,0.9);z-index:1}
-.sp .box{position:absolute;bottom:8mm;left:8mm;right:8mm;background:rgba(245,235,215,0.95);padding:14px 18px;z-index:3}
-.sp .box p{font:bold 15pt Georgia,serif;line-height:1.7;color:var(--brown)}
-.sp .gline{position:absolute;bottom:68mm;left:16mm;right:16mm;height:.8mm;background:var(--gold);z-index:3}
-.sp .num{position:absolute;bottom:59mm;left:50%;transform:translateX(-50%);width:14mm;height:14mm;border-radius:50%;background:var(--green);color:#fff;font:bold 11pt Arial,sans-serif;display:flex;align-items:center;justify-content:center;z-index:4;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+/* Bottom area */
+.sp .bt{position:absolute;bottom:0;left:0;right:0;height:85mm;background:rgba(50,35,24,0.85)}
+.sp .box{position:absolute;bottom:20mm;left:10mm;right:10mm;background:rgba(245,235,215,0.96);padding:10px 16px;border-radius:6px;border:1px solid rgba(200,160,80,0.4);box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+.sp .box p{font:bold 15pt Georgia,serif;line-height:1.6;color:var(--brown)}
+.sp .num{position:absolute;bottom:4mm;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.6);font:bold 14pt Arial,sans-serif;text-shadow:0 1px 3px rgba(0,0,0,0.5);letter-spacing:3px}
 
 /* Left-right layout */
 .lr{width:var(--pw);height:var(--ph);display:flex;background:var(--cream);margin:0 auto}
@@ -87,11 +71,6 @@ const css = `
 .cv .dv{width:100px;height:2px;background:var(--gold);margin-bottom:16px}
 .cv .st{font:italic 16pt Georgia,serif;color:var(--brown);margin-bottom:8px}
 .cv .au{font:12pt Georgia,serif;color:#888}
-
-/* Nav bar */
-.nav{width:var(--pw);display:flex;justify-content:space-between;padding:12px 20px;background:var(--brown);border-radius:0 0 4px 4px;margin:0 auto 24px}
-.nav a{color:var(--cream);text-decoration:none;font:bold 12pt Arial,sans-serif}
-.nav a:hover{color:var(--gold)}
 
 /* Content section (vocab, q, answer) */
 .sec{width:var(--pw);min-height:var(--ph);background:var(--cream);margin:0 auto;padding:20px 0 30px}
@@ -118,20 +97,11 @@ const css = `
 .sec .ans p{font-size:11pt;color:var(--brown);line-height:1.4}
 .sec .ans .ex{font-size:10pt;font-style:italic;color:#666;margin-top:3px;margin-left:6px}
 
-/* Read page (scrollable) */
-.read-page{width:var(--pw);height:var(--ph);position:relative;overflow:hidden;background:white;margin:16px auto}
-.read-page img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
-
-/* TOC */
-.toc{width:var(--pw);background:white;padding:30px;margin:0 auto 12px}
-.toc h2{color:var(--brown);margin-bottom:16px;font-size:18pt}
-.toc ul{list-style:none}
-.toc li{margin-bottom:6px}
-.toc a{color:var(--green);text-decoration:none;font-size:12pt;display:block;padding:4px 8px;border-radius:3px}
-.toc a:hover{background:var(--cream)}
-.toc .sg{font-weight:bold;color:var(--brown);margin:12px 0 6px;font-size:13pt}
-
-@media print{body{background:white;padding:0}.sp,.cv,.sec,.lr,.fb{box-shadow:none;margin:0;page-break-after:always}.nav,.toc{display:none}}
+/* Print: exact Letter size, each section gets its own page */
+@media print{
+  body{background:white;padding:0}
+  .sp,.cv,.sec,.lr,.fb{box-shadow:none;margin:0 auto;page-break-after:always}
+}
 `;
 
 // ── Render functions ──
@@ -154,11 +124,11 @@ function renderStoryPage(page, n) {
   switch (page.layout || 'bottom-overlay') {
     case 'bottom-overlay':
       return `<div class="sp">
-        <img src="images/${page.img}" alt="">
-        <div class="bar"></div>
+        <img class="sp-img" src="images/${page.img}" alt="">
+        <div class="bt">
         <div class="box"><p>${p}</p></div>
-        <div class="gline"></div>
-        <div class="num">${n}</div>
+        <div class="num">— ${n} —</div>
+        </div>
       </div>`;
     case 'left-right':
       return `<div class="lr">
@@ -171,64 +141,8 @@ function renderStoryPage(page, n) {
     case 'full-bleed':
       return `<div class="fb"><img src="images/${page.img}" alt=""></div>`;
     default:
-      return `<div class="sp"><img src="images/${page.img}" alt=""><div class="bar"></div><div class="box"><p>${p}</p></div><div class="gline"></div><div class="num">${n}</div></div>`;
+      return `<div class="sp"><img class="sp-img" src="images/${page.img}" alt=""><div class="bt"><div class="box"><p>${p}</p></div><div class="num">— ${n} —</div></div></div>`;
   }
-}
-
-function renderNav(prev, next) {
-  return `<div class="nav">
-  <a href="${prev}">⟨ Prev</a>
-  <a href="index.html">Cover</a>
-  <a href="${next}">Next ⟩</a>
-</div>`;
-}
-
-function renderToc(book) {
-  const links = book.pages.map((p, i) =>
-    `<li><a href="page-${String(i+1).padStart(2,'0')}.html">Page ${i+1} &mdash; ${esc(p.title)}</a></li>`
-  ).join('\n    ');
-
-  let studyLinks = '';
-  if (book.vocabulary) {
-    studyLinks += `<p class="sg">📝 Study</p><ul>
-      <li><a href="vocab.html">Vocabulary List</a></li>
-      <li><a href="questions.html">Questions 1 &ndash; 5</a></li>
-      <li><a href="questions-2.html">Questions 6 &ndash; 10</a></li>
-      <li><a href="answers.html">Answer Key</a></li>
-    </ul>`;
-  }
-
-  return `<div class="cv">
-  <div class="tb"></div>
-  <div class="cc">
-    <h1>${esc(book.title)}</h1>
-    <div class="dv"></div>
-    <p class="st">${book.subtitle}</p>
-    <p class="au">${esc(book.author || '')}</p>
-  </div>
-  <div class="bb"></div>
-</div>
-<div class="toc">
-  <h2>Contents</h2>
-  <p class="sg">📖 Story</p>
-  <ul>${links}</ul>
-  ${studyLinks}
-</div>
-<div class="nav" style="justify-content:center">
-  <a href="page-01.html">Start Reading →</a>
-</div>`;
-}
-
-function renderReadPage(book) {
-  let pages = '';
-  book.pages.forEach((p, i) => {
-    const n = i + 1;
-    const imgHtml = p.layout === 'full-bleed'
-      ? `<div class="fb"><img src="images/${p.img}" alt=""></div>`
-      : renderStoryPage(p, n);
-    pages += imgHtml + '\n';
-  });
-  return pages;
 }
 
 function renderVocab(book) {
@@ -244,16 +158,15 @@ function renderVocab(book) {
 </div>`;
 }
 
-function renderQuestions(book, start, end, title) {
+function renderQuestions(book) {
   if (!book.questions) return '';
-  const items = book.questions.slice(start - 1, end);
-  const qhtml = items.map(q => {
+  const qhtml = book.questions.map(q => {
     const opts = q.opts.map(o => `<p>${esc(o)}</p>`).join('\n        ');
     return `<div class="q"><p class="qt"><strong>${q.n}.</strong> ${esc(q.q)}</p>
       <div class="op">${opts}</div></div>`;
   }).join('\n    ');
   return `<div class="sec">
-  <div class="hd"><h2>${esc(title)}</h2><div class="ln"></div></div>
+  <div class="hd"><h2>Reading Comprehension</h2><div class="ln"></div></div>
   <p class="info">Read each question and choose the best answer.</p>
   ${qhtml}
 </div>`;
@@ -282,58 +195,44 @@ if (fs.existsSync(imagesDir)) {
   console.log(`  ✓ Images copied`);
 }
 
-const totalPages = book.pages.length;
+// Assemble full book: Cover → Vocab → Story → Questions → Answers
+let body = '';
 
-// Index (cover + TOC)
-fs.writeFileSync(path.join(distDir, 'index.html'), shell(book.title, renderToc(book)));
-console.log(`  ✓ index.html`);
+// 1. Cover
+body += renderCover(book) + '\n';
 
-// Individual story pages
+// 2. Vocabulary (right after cover, before story)
+body += renderVocab(book) + '\n';
+
+// 3. Story pages
 book.pages.forEach((p, i) => {
   const n = i + 1;
-  const prev = n === 1 ? 'index.html' : `page-${String(n-1).padStart(2,'0')}.html`;
-  const next = n === totalPages
-    ? (book.vocabulary ? 'vocab.html' : 'index.html')
-    : `page-${String(n+1).padStart(2,'0')}.html`;
-  const pageHtml = renderStoryPage(p, n) + '\n' + renderNav(prev, next);
-  fs.writeFileSync(path.join(distDir, `page-${String(n).padStart(2,'0')}.html`), shell(`${book.title} - Page ${n}`, pageHtml));
+  body += renderStoryPage(p, n) + '\n';
 });
-console.log(`  ✓ ${totalPages} story pages`);
 
-// Read (all pages scrollable)
-let readBody = `<div style="text-align:center;margin-bottom:16px"><a href="index.html" style="color:#f5ebd7;font-size:14pt;font-weight:bold;text-decoration:none">← Back to Contents</a></div>\n`;
-readBody += renderReadPage(book);
+// 4. Questions
+body += renderQuestions(book) + '\n';
 
-if (book.vocabulary) {
-  readBody += '\n' + renderVocab(book);
-}
-if (book.questions) {
-  readBody += '\n' + renderQuestions(book, 1, 5, 'Reading Comprehension');
-  readBody += '\n' + renderQuestions(book, 6, book.questions.length, 'Reading Comprehension (Continued)');
-  readBody += '\n' + renderAnswers(book);
-}
+// 5. Answer Key
+body += renderAnswers(book) + '\n';
 
-readBody += `\n<div style="text-align:center;margin:16px 0 40px"><a href="index.html" style="color:#f5ebd7;font-size:14pt;font-weight:bold;text-decoration:none">← Back to Contents</a></div>`;
-fs.writeFileSync(path.join(distDir, 'read.html'), shell(`${book.title} - Full Book`, readBody));
-console.log(`  ✓ read.html`);
+// Wrap in HTML shell
+const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(book.title)}</title>
+<style>
+body{background:#666;font-family:Georgia,'Times New Roman',serif}
+${css}
+</style>
+</head>
+<body>
+${body}
+</body>
+</html>`;
 
-// Vocab page (standalone)
-if (book.vocabulary) {
-  const prev = `page-${String(totalPages).padStart(2,'0')}.html`;
-  const next = book.questions ? 'questions.html' : 'index.html';
-  fs.writeFileSync(path.join(distDir, 'vocab.html'), shell(`${book.title} - Vocabulary`, renderVocab(book) + '\n' + renderNav(prev, next)));
-  console.log(`  ✓ vocab.html`);
-}
-
-// Questions pages (standalone)
-if (book.questions) {
-  const qHalf = Math.ceil(book.questions.length / 2);
-  const q1 = renderQuestions(book, 1, qHalf, 'Reading Comprehension');
-  const q2 = renderQuestions(book, qHalf + 1, book.questions.length, 'Reading Comprehension (Continued)');
-  fs.writeFileSync(path.join(distDir, 'questions.html'), shell(`${book.title} - Questions 1-${qHalf}`, q1 + '\n' + renderNav('vocab.html', 'questions-2.html')));
-  fs.writeFileSync(path.join(distDir, 'questions-2.html'), shell(`${book.title} - Questions ${qHalf+1}-${book.questions.length}`, q2 + '\n' + renderNav('questions.html', 'answers.html')));
-  fs.writeFileSync(path.join(distDir, 'answers.html'), shell(`${book.title} - Answer Key`, renderAnswers(book) + '\n' + renderNav('questions-2.html', 'index.html')));
-  console.log(`  ✓ questions + answers`);
-}
-
+fs.writeFileSync(path.join(distDir, 'index.html'), html);
+console.log(`  ✓ index.html (scrollable: cover → vocab → story → questions → answers)`);
 console.log(`✅ Build complete → ${distDir}/`);

@@ -1,73 +1,74 @@
-# Book Template
+# Children's Book Template (桥梁书)
 
-Svelte-based children's book template. Write content in `book.json`, build to static HTML.
+Zero-dependency book builder for children's early readers. Outputs a single scrollable HTML page → print/save as PDF.
 
 ## Quick Start
 
 ```bash
-# Create a new book from this template
-npx degit kkwangsir/book-template my-new-book
-cd my-new-book
+git clone git@github.com:kkwangsir/book-template.git my-book
+cd my-book
 
-# Install dependencies (first time only)
-npm install
+# 1. Put your images in images/ (1024×1536 JPG recommended)
+# 2. Edit template/book.json with your story
+# 3. Build
+node build.js template
 
-# Edit your book content
-vim book.json
-
-# Add images to images/
-cp /path/to/images/*.png images/
-
-# Build
-npm run build
-
-# Preview locally
-npx serve dist
+# Output: template/docs/index.html
 ```
 
-## book.json Structure
+## Layout
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Book title (cover + page title) |
-| `subtitle` | string | Subtitle (can include `<br>` for line breaks) |
-| `author` | string | Author credit |
-| `pages[]` | array | Story pages |
-| `pages[].title` | string | Page title (for table of contents) |
-| `pages[].layout` | string | Layout type: `bottom-overlay`, `left-right`, `full-bleed` |
-| `pages[].img` | string | Image filename (must be in `images/`) |
-| `pages[].text` | string | Page text. `\n\n` = paragraph break, `\n` = line break |
-| `vocabulary[]` | array | (Optional) Vocabulary list |
-| `questions[]` | array | (Optional) Multiple choice questions |
+One scrollable page, ready to print:
+```
+Cover → Vocabulary List → Story Pages → Reading Comprehension → Answer Key
+```
 
-## Available Layouts
+Letter size (215.9×279.4mm). Open `docs/index.html` → Ctrl+P → Save as PDF.
 
-| Layout | Description |
-|--------|-------------|
-| `bottom-overlay` | Full-bleed image with text box at bottom (default) |
-| `left-right` | Image left 60%, text right 40% |
-| `full-bleed` | Full-page image, no text |
+## Structure
 
-## Deploy to GitHub Pages
+```
+my-book/
+├── images/            # page_01.jpg, page_02.jpg ...
+├── book.json          # Story data
+└── build.js           # Build script (stands alone, no npm install)
+```
+
+## book.json Format
+
+See `template/book.json` for the full schema.
+
+Required fields:
+- `pages[]` — title, img (filename), text (use `\n\n` for paragraphs), layout ("bottom-overlay" or "left-right")
+- `vocabulary[]` — word, pron (IPA), type, zh, en
+- `questions[]` — n, q, opts[4], ans, text, exp
+
+## Image Guidelines
+
+- **Size:** 1024×1536 (portrait, matches Letter)
+- **Format:** JPG quality 85 (~400KB/page recommended)
+- **Content:** Use GPT Image 2 ("Western comic book art, American graphic novel style")
+- **Character:** Keep consistent appearance across pages
+
+## Build & Deploy
 
 ```bash
-npm run build
-cd dist
+# Build outputs to docs/
+node build.js .
+
+# Deploy to GitHub Pages
 git init
 git add -A
-git commit -m "deploy"
-git remote add origin git@github.com:kkwangsir/my-new-book.git
+git commit -m "initial book"
+git remote add origin git@github.com:<USER>/<REPO>.git
 git push -u origin master
-# Enable Pages → deploy from master branch / (root)
+
+# Settings → Pages → branch: master, folder: /docs
 ```
 
-## Development
+## Tech
 
-```bash
-npm run dev    # Start Vite dev server with Svelte component preview
-npm run build  # Build static HTML from book.json
-```
-
-## License
-
-MIT
+- **Standalone Node.js** — just `node build.js`, no npm install needed
+- **WeasyPrint** (optional) — `pip install weasyprint && weasyprint docs/index.html book.pdf`
+- **Letter size** — `@page{size:Letter;margin:0}` for exact PDF output
+- **Print colors** — `print-color-adjust:exact` preserves backgrounds in Chrome
